@@ -1,0 +1,69 @@
+.stat-card {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #007bff;
+}
+
+.stat-card p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.stat-pending h3 { color: #ffc107; }
+.stat-confirmed h3 { color: #28a745; }
+.stat-completed h3 { color: #17a2b8; }
+.stat-cancelled h3 { color: #dc3545; }
+.stat-revenue h3 { color: #6f42c1; }
+
+.badge-warning {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.badge-success {
+  background-color: #28a745;
+}
+
+.badge-danger {
+  background-color: #dc3545;
+}
+
+.badge-info {
+  background-color: #17a2b8;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+}
+
+.table-responsive {
+  margin-top: 20px;
+}
+
+.btn-group-vertical {
+  width: 100%;
+}
+
+.btn-group-vertical .btn {
+  margin-bottom: 2px;
+}
+
+.alert {
+  margin-top: 20px;
+}

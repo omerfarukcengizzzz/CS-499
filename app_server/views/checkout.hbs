@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <style>
+        .checkout-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+        .checkout-form {
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-section {
+            margin-bottom: 30px;
+        }
+        .form-section h3 {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .order-summary {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 5px;
+            position: sticky;
+            top: 20px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .summary-total {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 3px solid #007bff;
+        }
+        .btn-checkout {
+            width: 100%;
+            padding: 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn-checkout:hover {
+            background-color: #218838;
+        }
+        .trip-mini {
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .trip-mini-header {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div id="background">
+        <div id="page">
+            {{> header}}
+            <div id="contents">
+                <div class="box">
+                    <div>
+                        <div class="body">
+                            <div class="checkout-container">
+                                <h1>Checkout</h1>
+
+                                {{#if error}}
+                                <div class="alert alert-error">
+                                    {{error}}
+                                </div>
+                                {{/if}}
+
+                                <div class="checkout-layout">
+                                    <div class="checkout-form">
+                                        <form action="/checkout" method="POST">
+                                            <div class="form-section">
+                                                <h3>Contact Information</h3>
+                                                
+                                                <div class="form-group">
+                                                    <label for="userName">Full Name: *</label>
+                                                    <input type="text" id="userName" name="userName" 
+                                                           value="{{userName}}" required>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="userEmail">Email: *</label>
+                                                    <input type="email" id="userEmail" name="userEmail" 
+                                                           value="{{userEmail}}" readonly>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="contactPhone">Phone Number: *</label>
+                                                    <input type="tel" id="contactPhone" name="contactPhone" 
+                                                           placeholder="(555) 123-4567" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section">
+                                                <h3>Special Requests (Optional)</h3>
+                                                
+                                                <div class="form-group">
+                                                    <label for="specialRequests">
+                                                        Any special requirements or requests?
+                                                    </label>
+                                                    <textarea id="specialRequests" name="specialRequests" 
+                                                              placeholder="Dietary restrictions, accessibility needs, room preferences, etc."></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section">
+                                                <div class="form-group">
+                                                    <label>
+                                                        <input type="checkbox" required>
+                                                        I agree to the <a href="/about">Terms & Conditions</a> 
+                                                        and <a href="/about">Privacy Policy</a>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" class="btn-checkout">
+                                                Complete Booking
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div class="order-summary">
+                                        <h3>Order Summary</h3>
+
+                                        <div style="margin: 20px 0;">
+                                            {{#each cart.items}}
+                                            <div class="trip-mini">
+                                                <div class="trip-mini-header">{{this.tripName}}</div>
+                                                <div style="font-size: 0.9em; color: #666;">
+                                                    {{this.travelers}} traveler(s) × ${{this.pricePerPerson}}
+                                                </div>
+                                                <div style="font-size: 0.9em; color: #666;">
+                                                    Travel Date: {{this.travelDate}}
+                                                </div>
+                                                <div style="text-align: right; font-weight: bold; margin-top: 5px;">
+                                                    ${{this.subtotal}}
+                                                </div>
+                                            </div>
+                                            {{/each}}
+                                        </div>
+
+                                        <div class="summary-item">
+                                            <span>Subtotal:</span>
+                                            <span>${{cart.totalPrice}}</span>
+                                        </div>
+
+                                        <div class="summary-item">
+                                            <span>Tax (0%):</span>
+                                            <span>$0.00</span>
+                                        </div>
+
+                                        <div class="summary-total">
+                                            <div style="display: flex; justify-content: space-between;">
+                                                <span>Total:</span>
+                                                <span>${{cart.totalPrice}}</span>
+                                            </div>
+                                        </div>
+
+                                        <p style="font-size: 0.9em; color: #666; margin-top: 20px;">
+                                            <strong>Note:</strong> You will receive a confirmation email 
+                                            after completing your booking. All bookings are subject to 
+                                            availability confirmation.
+                                        </p>
+
+                                        <a href="/cart" style="display: block; text-align: center; margin-top: 15px; color: #007bff;">
+                                            ← Back to Cart
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{> footer}}
+    </div>
+</body>
+</html>

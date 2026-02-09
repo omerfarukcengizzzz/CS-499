@@ -1,0 +1,48 @@
+<div class="container mt-4">
+  <h2>User Management</h2>
+
+  <div *ngIf="message" class="alert alert-info">
+    {{ message }}
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!isLoggedIn()" class="alert alert-warning">
+    <p>You must be logged in to view users.</p>
+    <a routerLink="/login" class="btn btn-primary">Login</a>
+  </div>
+
+  <div *ngIf="isLoggedIn() && users.length > 0" class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>User ID</th>
+          <th *ngIf="isLoggedIn()">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user._id }}</td>
+          <td *ngIf="isLoggedIn()">
+            <button 
+              (click)="deleteUser(user)" 
+              class="btn btn-danger btn-sm"
+              title="Delete User">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="isLoggedIn() && users.length === 0 && !error" class="alert alert-info">
+    <p>No users registered yet.</p>
+  </div>
+</div>

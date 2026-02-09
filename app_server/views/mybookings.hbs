@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <style>
+        .bookings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .booking-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        .booking-details {
+            flex: 1;
+        }
+        .booking-details h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .booking-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .booking-info-item {
+            padding: 5px 0;
+        }
+        .booking-info-item strong {
+            display: inline-block;
+            width: 150px;
+        }
+        .booking-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-confirmed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-completed {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .booking-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background-color: #c82333;
+        }
+        .no-bookings {
+            text-align: center;
+            padding: 40px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .no-bookings a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="background">
+        <div id="page">
+            {{> header}}
+            <div id="contents">
+                <div class="box">
+                    <div>
+                        <div class="body">
+                            <div class="bookings-container">
+                                <h1>My Bookings</h1>
+
+                                {{#if (eq success 'checkout')}}
+                                <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; margin-bottom: 20px; border-radius: 5px;">
+                                    <h3>🎉 Booking Successful!</h3>
+                                    <p>Your trips have been booked successfully! You will receive confirmation emails shortly.</p>
+                                </div>
+                                {{/if}}
+
+                                {{#if message}}
+                                <div class="no-bookings">
+                                    <h3>{{message}}</h3>
+                                    <a href="/travel">Browse Trips</a>
+                                </div>
+                                {{else}}
+                                
+                                {{#each bookings}}
+                                <div class="booking-card">
+                                    <div class="booking-details">
+                                        <h3>{{this.tripName}}</h3>
+                                        <span class="booking-status status-{{this.status}}">
+                                            {{this.status}}
+                                        </span>
+                                        
+                                        <div class="booking-info">
+                                            <div class="booking-info-item">
+                                                <strong>Booking ID:</strong> {{this._id}}
+                                            </div>
+                                            <div class="booking-info-item">
+                                                <strong>Trip Code:</strong> {{this.tripCode}}
+                                            </div>
+                                            <div class="booking-info-item">
+                                                <strong>Travelers:</strong> {{this.travelers}}
+                                            </div>
+                                            <div class="booking-info-item">
+                                                <strong>Total Price:</strong> ${{this.totalPrice}}
+                                            </div>
+                                            <div class="booking-info-item">
+                                                <strong>Travel Date:</strong> {{this.travelDate}}
+                                            </div>
+                                            <div class="booking-info-item">
+                                                <strong>Booking Date:</strong> {{this.bookingDate}}
+                                            </div>
+                                            {{#if this.contactPhone}}
+                                            <div class="booking-info-item">
+                                                <strong>Contact Phone:</strong> {{this.contactPhone}}
+                                            </div>
+                                            {{/if}}
+                                            {{#if this.specialRequests}}
+                                            <div class="booking-info-item" style="grid-column: 1 / -1;">
+                                                <strong>Special Requests:</strong> {{this.specialRequests}}
+                                            </div>
+                                            {{/if}}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="booking-actions">
+                                        {{#if (eq this.status 'pending')}}
+                                        <form action="/mybookings/cancel/{{this._id}}" method="POST" 
+                                              onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                            <button type="submit" class="btn-cancel">Cancel Booking</button>
+                                        </form>
+                                        {{/if}}
+                                    </div>
+                                </div>
+                                {{/each}}
+                                
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{> footer}}
+    </div>
+</body>
+</html>

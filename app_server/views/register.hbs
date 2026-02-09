@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <style>
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .success-message {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .form-table {
+            width: 100%;
+            max-width: 500px;
+        }
+        .form-table td {
+            padding: 10px;
+        }
+        .form-table input[type="text"],
+        .form-table input[type="email"],
+        .form-table input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .btn-submit {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-submit:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="background">
+        <div id="page">
+            {{> header}}
+            <div id="contents">
+                <div class="box">
+                    <div>
+                        <div class="body">
+                            <h1>Sign Up</h1>
+                            
+                            {{#if error}}
+                            <div class="error-message">
+                                {{error}}
+                            </div>
+                            {{/if}}
+                            
+                            {{#if success}}
+                            <div class="success-message">
+                                {{success}}
+                                <br><a href="/login">Click here to login</a>
+                            </div>
+                            {{/if}}
+                            
+                            <form action="/register" method="POST">
+                                <table class="form-table">
+                                    <tbody>
+                                        <tr>
+                                            <td><label for="name">* Name:</label></td>
+                                            <td><input type="text" id="name" name="name" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td><label for="email">* Email:</label></td>
+                                            <td><input type="email" id="email" name="email" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td><label for="password">* Password:</label></td>
+                                            <td><input type="password" id="password" name="password" required minlength="8"></td>
+                                        </tr>
+                                        <tr>
+                                            <td><label for="passwordConfirm">* Re-type password:</label></td>
+                                            <td><input type="password" id="passwordConfirm" name="passwordConfirm" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                <label>
+                                                    <input type="checkbox" name="terms" required>
+                                                    I agree to the <a href="/about">Terms of Use</a> and <a href="/about">Privacy Policy</a>.
+                                                </label>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td>
+                                                <button type="submit" class="btn-submit">Sign up</button>
+                                                <br><br>
+                                                <p>Already have an account? <a href="/login">Login here</a></p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{> footer}}
+    </div>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<div class="container mt-4">
+  <h2>Booking Management</h2>
+
+  <div *ngIf="message" class="alert alert-info">
+    {{ message }}
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!isLoggedIn()" class="alert alert-warning">
+    <p>You must be logged in to view bookings.</p>
+    <a routerLink="/login" class="btn btn-primary">Login</a>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div *ngIf="isLoggedIn()" class="row mb-4">
+    <div class="col-md-2">
+      <div class="stat-card">
+        <h3>{{stats.total}}</h3>
+        <p>Total Bookings</p>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="stat-card stat-pending">
+        <h3>{{stats.pending}}</h3>
+        <p>Pending</p>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="stat-card stat-confirmed">
+        <h3>{{stats.confirmed}}</h3>
+        <p>Confirmed</p>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="stat-card stat-completed">
+        <h3>{{stats.completed}}</h3>
+        <p>Completed</p>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="stat-card stat-cancelled">
+        <h3>{{stats.cancelled}}</h3>
+        <p>Cancelled</p>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="stat-card stat-revenue">
+        <h3>${{stats.totalRevenue}}</h3>
+        <p>Revenue</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Buttons -->
+  <div *ngIf="isLoggedIn()" class="btn-group mb-3" role="group">
+    <button type="button" class="btn btn-outline-primary" 
+            [class.active]="filterStatus === 'all'"
+            (click)="filterByStatus('all')">
+      All ({{stats.total}})
+    </button>
+    <button type="button" class="btn btn-outline-warning" 
+            [class.active]="filterStatus === 'pending'"
+            (click)="filterByStatus('pending')">
+      Pending ({{stats.pending}})
+    </button>
+    <button type="button" class="btn btn-outline-success" 
+            [class.active]="filterStatus === 'confirmed'"
+            (click)="filterByStatus('confirmed')">
+      Confirmed ({{stats.confirmed}})
+    </button>
+    <button type="button" class="btn btn-outline-info" 
+            [class.active]="filterStatus === 'completed'"
+            (click)="filterByStatus('completed')">
+      Completed ({{stats.completed}})
+    </button>
+    <button type="button" class="btn btn-outline-danger" 
+            [class.active]="filterStatus === 'cancelled'"
+            (click)="filterByStatus('cancelled')">
+      Cancelled ({{stats.cancelled}})
+    </button>
+  </div>
+
+  <!-- Bookings Table -->
+  <div *ngIf="isLoggedIn() && filteredBookings.length > 0" class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Booking ID</th>
+          <th>Customer</th>
+          <th>Trip</th>
+          <th>Travelers</th>
+          <th>Travel Date</th>
+          <th>Total Price</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let booking of filteredBookings">
+          <td><small>{{booking._id}}</small></td>
+          <td>
+            <strong>{{booking.userName}}</strong><br>
+            <small>{{booking.userEmail}}</small><br>
+            <small *ngIf="booking.contactPhone">📞 {{booking.contactPhone}}</small>
+          </td>
+          <td>
+            <strong>{{booking.tripName}}</strong><br>
+            <small>Code: {{booking.tripCode}}</small>
+          </td>
+          <td class="text-center">{{booking.travelers}}</td>
+          <td>{{booking.travelDate | date:'short'}}</td>
+          <td><strong>${{booking.totalPrice}}</strong></td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(booking.status)">
+              {{booking.status}}
+            </span>
+          </td>
+          <td>
+            <div class="btn-group-vertical btn-group-sm">
+              <button *ngIf="booking.status === 'pending'" 
+                      (click)="updateStatus(booking, 'confirmed')" 
+                      class="btn btn-success btn-sm"
+                      title="Confirm Booking">
+                Confirm
+              </button>
+              <button *ngIf="booking.status === 'confirmed'" 
+                      (click)="updateStatus(booking, 'completed')" 
+                      class="btn btn-info btn-sm"
+                      title="Mark as Completed">
+                Complete
+              </button>
+              <button *ngIf="booking.status !== 'cancelled'" 
+                      (click)="updateStatus(booking, 'cancelled')" 
+                      class="btn btn-warning btn-sm"
+                      title="Cancel Booking">
+                Cancel
+              </button>
+              <button (click)="deleteBooking(booking)" 
+                      class="btn btn-danger btn-sm"
+                      title="Delete Booking">
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="isLoggedIn() && filteredBookings.length === 0 && !error" class="alert alert-info">
+    <p>No bookings found with status: {{filterStatus}}</p>
+  </div>
+</div>

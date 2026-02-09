@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!-- Website template by freewebsitetemplates.com -->
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Travel - Travlr Getaways</title>
+	<link rel="stylesheet" href="css/style.css" type="text/css">
+	<style>
+		.search-container {
+			margin: 20px 0;
+			padding: 20px;
+			background-color: #f8f9fa;
+			border-radius: 5px;
+		}
+		.search-form {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+		}
+		.search-input {
+			flex: 1;
+			padding: 10px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 16px;
+		}
+		.search-btn {
+			padding: 10px 20px;
+			background-color: #007bff;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 16px;
+		}
+		.search-btn:hover {
+			background-color: #0056b3;
+		}
+		.clear-btn {
+			padding: 10px 20px;
+			background-color: #6c757d;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 16px;
+			text-decoration: none;
+			display: inline-block;
+		}
+		.clear-btn:hover {
+			background-color: #5a6268;
+		}
+		.search-message {
+			margin-top: 10px;
+			padding: 10px;
+			background-color: #d1ecf1;
+			border: 1px solid #bee5eb;
+			border-radius: 4px;
+			color: #0c5460;
+		}
+		.no-results {
+			background-color: #f8d7da;
+			border-color: #f5c6cb;
+			color: #721c24;
+		}
+		.category-tabs {
+			display: flex;
+			gap: 10px;
+			margin: 20px 0;
+			border-bottom: 2px solid #ddd;
+		}
+		.category-tab {
+			padding: 12px 24px;
+			background-color: #f8f9fa;
+			border: 1px solid #ddd;
+			border-bottom: none;
+			border-radius: 5px 5px 0 0;
+			text-decoration: none;
+			color: #333;
+			cursor: pointer;
+			transition: all 0.3s;
+		}
+		.category-tab:hover {
+			background-color: #e9ecef;
+		}
+		.category-tab.active {
+			background-color: #007bff;
+			color: white;
+			border-color: #007bff;
+		}
+		.category-tab .count {
+			background-color: rgba(0,0,0,0.2);
+			padding: 2px 8px;
+			border-radius: 10px;
+			margin-left: 5px;
+			font-size: 0.9em;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="background">
+		<div id="page">
+			{{> header}}
+			<div id="contents">
+				<div class="box">
+					<div>
+						<div class="body">
+							<h1>Travel</h1>
+							
+							<div class="category-tabs">
+								<a href="/travel?category=all{{#if searchQuery}}&search={{searchQuery}}{{/if}}" 
+								   class="category-tab {{#if (eq category 'all')}}active{{/if}}">
+									All Trips
+								</a>
+								<a href="/travel?category=beach{{#if searchQuery}}&search={{searchQuery}}{{/if}}" 
+								   class="category-tab {{#if (eq category 'beach')}}active{{/if}}">
+									Beaches <span class="count">{{beachCount}}</span>
+								</a>
+								<a href="/travel?category=cruise{{#if searchQuery}}&search={{searchQuery}}{{/if}}" 
+								   class="category-tab {{#if (eq category 'cruise')}}active{{/if}}">
+									Cruises <span class="count">{{cruiseCount}}</span>
+								</a>
+								<a href="/travel?category=mountain{{#if searchQuery}}&search={{searchQuery}}{{/if}}" 
+								   class="category-tab {{#if (eq category 'mountain')}}active{{/if}}">
+									Mountains <span class="count">{{mountainCount}}</span>
+								</a>
+								<a href="/travel?category=other{{#if searchQuery}}&search={{searchQuery}}{{/if}}" 
+								   class="category-tab {{#if (eq category 'other')}}active{{/if}}">
+									Other <span class="count">{{otherCount}}</span>
+								</a>
+							</div>
+							
+							<div class="search-container">
+								<form action="/travel" method="GET" class="search-form">
+									<input type="hidden" name="category" value="{{category}}">
+									<input 
+										type="text" 
+										name="search" 
+										class="search-input" 
+										placeholder="Search trips by name, destination, or description... (Use tabs above to filter by category)"
+										value="{{searchQuery}}"
+									>
+									<button type="submit" class="search-btn">Search</button>
+									{{#if searchQuery}}
+									<a href="/travel?category={{category}}" class="clear-btn">Clear</a>
+									{{/if}}
+								</form>
+								
+								{{#if message}}
+								<div class="search-message {{#unless trips.length}}no-results{{/unless}}">
+									{{message}}
+								</div>
+								{{/if}}
+							</div>
+
+							<ul id="sites">
+								{{#each trips}}
+								<li>
+									<a href="/api/trips/{{this.code}}"><img src="images/{{this.image}}" alt="{{this.name}}"></a>
+									<h2><a href="/travel">{{this.name}}</a></h2>
+									<p><strong>Category:</strong> {{this.category}}</p>
+									<p><strong>Resort:</strong> {{this.resort}}</p>
+									<p><strong>Price:</strong> ${{this.perPerson}} per person</p>
+									<p><strong>Duration:</strong> {{this.length}}</p>
+									{{this.description}}
+									
+									<div style="margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+										<form action="/cart/add" method="POST">
+											<input type="hidden" name="tripCode" value="{{this.code}}">
+											<input type="hidden" name="tripName" value="{{this.name}}">
+											<input type="hidden" name="tripImage" value="{{this.image}}">
+											<input type="hidden" name="resort" value="{{this.resort}}">
+											<input type="hidden" name="length" value="{{this.length}}">
+											<input type="hidden" name="pricePerPerson" value="{{this.perPerson}}">
+											
+											<div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+												<label>Travelers:</label>
+												<input type="number" name="travelers" value="1" min="1" max="10" 
+													   style="width: 60px; padding: 5px;">
+												<label>Date:</label>
+												<input type="date" name="travelDate" required 
+													   style="padding: 5px;">
+											</div>
+											
+											<div style="display: flex; gap: 10px;">
+												<button type="submit" 
+														style="flex: 1; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+													🛒 Add to Cart
+												</button>
+												<a href="/booking/{{this.code}}" 
+												   style="flex: 1; padding: 10px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; text-align: center; display: block;">
+													Book Now
+												</a>
+											</div>
+										</form>
+									</div>
+								</li>
+								{{/each}}
+
+								{{#unless trips.length}}
+								{{#unless message}}
+								<li>
+									<p>No trips available at this time. Please check back later.</p>
+								</li>
+								{{/unless}}
+								{{/unless}}
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		{{> footer}}
+	</div>
+</body>
+
+</html>

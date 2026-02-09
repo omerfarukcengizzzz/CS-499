@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <style>
+        .booking-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .trip-summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .trip-summary img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .booking-form {
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .price-calculator {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        .total-price {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .btn-book {
+            background-color: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-book:hover {
+            background-color: #218838;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .success-message {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .login-required {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function calculateTotal() {
+            const pricePerPerson = parseFloat(document.getElementById('pricePerPerson').value);
+            const travelers = parseInt(document.getElementById('travelers').value) || 1;
+            const total = pricePerPerson * travelers;
+            document.getElementById('totalPrice').textContent = '$' + total.toFixed(2);
+            document.getElementById('travelerCount').textContent = travelers;
+        }
+    </script>
+</head>
+<body>
+    <div id="background">
+        <div id="page">
+            {{> header}}
+            <div id="contents">
+                <div class="box">
+                    <div>
+                        <div class="body">
+                            <div class="booking-container">
+                                <h1>Book Your Trip</h1>
+
+                                {{#if error}}
+                                <div class="error-message">
+                                    {{error}}
+                                </div>
+                                {{/if}}
+
+                                {{#if success}}
+                                <div class="success-message">
+                                    {{success}}
+                                    <br><br>
+                                    <a href="/travel">Browse More Trips</a> | 
+                                    <a href="/">Back to Home</a>
+                                </div>
+                                {{else}}
+
+                                <div class="trip-summary">
+                                    <h2>{{trip.name}}</h2>
+                                    <img src="/images/{{trip.image}}" alt="{{trip.name}}">
+                                    <p><strong>Resort:</strong> {{trip.resort}}</p>
+                                    <p><strong>Duration:</strong> {{trip.length}}</p>
+                                    <p><strong>Price per Person:</strong> ${{trip.perPerson}}</p>
+                                    <div>{{{trip.description}}}</div>
+                                </div>
+
+                                {{#unless isLoggedIn}}
+                                <div class="login-required">
+                                    <h3>Login Required</h3>
+                                    <p>You must be logged in to book a trip.</p>
+                                    <a href="/login" class="btn-book" style="display: inline-block; width: auto;">Login Now</a>
+                                    <p style="margin-top: 15px;">Don't have an account? <a href="/register">Register here</a></p>
+                                </div>
+                                {{else}}
+
+                                <div class="booking-form">
+                                    <h3>Booking Details</h3>
+                                    <form action="/booking/{{trip.code}}" method="POST">
+                                        <input type="hidden" id="pricePerPerson" value="{{trip.perPerson}}">
+                                        
+                                        <div class="form-group">
+                                            <label for="userName">Name:</label>
+                                            <input type="text" id="userName" name="userName" value="{{userName}}" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="userEmail">Email:</label>
+                                            <input type="email" id="userEmail" name="userEmail" value="{{userEmail}}" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="travelers">Number of Travelers: *</label>
+                                            <input type="number" id="travelers" name="travelers" min="1" max="10" value="1" 
+                                                   required onchange="calculateTotal()">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="travelDate">Travel Date: *</label>
+                                            <input type="date" id="travelDate" name="travelDate" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="contactPhone">Contact Phone:</label>
+                                            <input type="tel" id="contactPhone" name="contactPhone" 
+                                                   placeholder="(555) 123-4567">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="specialRequests">Special Requests:</label>
+                                            <textarea id="specialRequests" name="specialRequests" 
+                                                      placeholder="Dietary restrictions, accessibility needs, etc."></textarea>
+                                        </div>
+
+                                        <div class="price-calculator">
+                                            <h4>Price Summary</h4>
+                                            <div class="price-row">
+                                                <span>Price per Person:</span>
+                                                <span>${{trip.perPerson}}</span>
+                                            </div>
+                                            <div class="price-row">
+                                                <span>Number of Travelers:</span>
+                                                <span id="travelerCount">1</span>
+                                            </div>
+                                            <hr>
+                                            <div class="price-row total-price">
+                                                <span>Total Price:</span>
+                                                <span id="totalPrice">${{trip.perPerson}}</span>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn-book">Confirm Booking</button>
+                                    </form>
+                                </div>
+                                {{/unless}}
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{> footer}}
+    </div>
+</body>
+</html>

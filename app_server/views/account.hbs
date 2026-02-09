@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <style>
+        .account-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .account-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .account-header h1 {
+            margin: 0 0 10px 0;
+            color: white !important;
+        }
+        .account-header p {
+            margin: 5px 0;
+            opacity: 1;
+            color: white !important;
+        }
+        .account-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .account-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 30px;
+        }
+        .account-card h2 {
+            margin-top: 0;
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .profile-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-info-item:last-child {
+            border-bottom: none;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        @media (max-width: 768px) {
+            .account-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="background">
+        <div id="page">
+            {{> header}}
+            <div id="contents">
+                <div class="box">
+                    <div>
+                        <div class="body">
+                            <div class="account-container">
+                                {{#if success}}
+                                <div class="alert alert-success">
+                                    {{#if (eq success 'profile_updated')}}Profile updated successfully!{{/if}}
+                                </div>
+                                {{/if}}
+
+                                <div class="account-header">
+                                    <h1>Welcome back, {{user.name}}!</h1>
+                                    <p>📧 {{user.email}}</p>
+                                    <p>Member since your first booking</p>
+                                </div>
+
+                                <div class="account-grid">
+                                    <div class="account-card">
+                                        <h2>Profile Information</h2>
+                                        <div class="profile-info">
+                                            <div class="profile-info-item">
+                                                <strong>Full Name:</strong>
+                                                <span>{{user.name}}</span>
+                                            </div>
+                                            <div class="profile-info-item">
+                                                <strong>Email Address:</strong>
+                                                <span>{{user.email}}</span>
+                                            </div>
+                                            <div class="profile-info-item">
+                                                <strong>Account ID:</strong>
+                                                <span style="font-size: 0.9em; color: #666;">{{user._id}}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="quick-actions">
+                                            <a href="/account/edit" class="btn btn-primary">Edit Profile</a>
+                                            <a href="/login/logout" class="btn btn-secondary">Logout</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="account-card">
+                                        <h2>Booking Statistics</h2>
+                                        <div class="stats-grid">
+                                            <div class="stat-box">
+                                                <div class="stat-number">{{bookingStats.total}}</div>
+                                                <div class="stat-label">Total Bookings</div>
+                                            </div>
+                                            <div class="stat-box">
+                                                <div class="stat-number">{{bookingStats.pending}}</div>
+                                                <div class="stat-label">Pending</div>
+                                            </div>
+                                            <div class="stat-box">
+                                                <div class="stat-number">{{bookingStats.confirmed}}</div>
+                                                <div class="stat-label">Confirmed</div>
+                                            </div>
+                                            <div class="stat-box">
+                                                <div class="stat-number">{{bookingStats.completed}}</div>
+                                                <div class="stat-label">Completed</div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: center; margin-top: 20px; padding: 20px; background-color: #e7f3ff; border-radius: 8px;">
+                                            <div style="font-size: 0.9em; color: #666;">Total Spent</div>
+                                            <div style="font-size: 2em; font-weight: bold; color: #007bff;">
+                                                ${{bookingStats.totalSpent}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="account-card">
+                                    <h2>Quick Links</h2>
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                        <a href="/mybookings" class="btn btn-primary">📅 My Bookings</a>
+                                        <a href="/cart" class="btn btn-info">🛒 Shopping Cart</a>
+                                        <a href="/travel" class="btn btn-success">✈️ Browse Trips</a>
+                                        <a href="/contact" class="btn btn-secondary">📞 Contact Us</a>
+                                    </div>
+                                </div>
+
+                                <div class="account-card">
+                                    <h2>Account Actions</h2>
+                                    <div class="profile-info">
+                                        <div class="profile-info-item">
+                                            <span>Change Password</span>
+                                            <a href="/account/change-password" style="color: #007bff;">Update →</a>
+                                        </div>
+                                        <div class="profile-info-item">
+                                            <span>Email Preferences</span>
+                                            <a href="/account/notifications" style="color: #007bff;">Manage →</a>
+                                        </div>
+                                        <div class="profile-info-item">
+                                            <span>Privacy Settings</span>
+                                            <a href="/account/privacy" style="color: #007bff;">Configure →</a>
+                                        </div>
+                                        <div class="profile-info-item">
+                                            <span>Delete Account</span>
+                                            <a href="/account/delete" style="color: #dc3545;">Delete →</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{> footer}}
+    </div>
+</body>
+</html>
