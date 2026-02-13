@@ -9,6 +9,15 @@ const authController = require('../controllers/authentication');
 const usersController = require('../controllers/users');
 const bookingsController = require('../controllers/bookings');
 const cartController = require('../controllers/cart');
+const {
+    validateRegister,
+    validateLogin,
+    validateTrip,
+    validateBooking,
+    validateBookingStatus,
+    validateCartItem,
+    validateEmail
+} = require('../middleware/validation');
 
 // Rate limiter for login attempts - 5 attempts per 15 minutes
 const loginLimiter = rateLimit({
@@ -77,18 +86,18 @@ function requireAdmin(req, res, next) {
 router
     .route('/trips')
     .get(tripsController.tripsList)       // GET Method routes tripsList
-    .post(authenticateJWT, requireAdmin, tripsController.tripsAddTrip);  // POST Method adds a trip - PROTECTED
+    .post(authenticateJWT, requireAdmin, validateTrip, tripsController.tripsAddTrip);  // POST Method adds a trip - PROTECTED
 
 // GET Method routes tripsFindByCode - requires parameter   
 router
     .route('/trips/:tripCode')
     .get(tripsController.tripsFindByCode)      // GET single trip
-    .put(authenticateJWT, requireAdmin, tripsController.tripsUpdateTrip)      // PUT Method updates a trip - PROTECTED
+    .put(authenticateJWT, requireAdmin, validateTrip, tripsController.tripsUpdateTrip)      // PUT Method updates a trip - PROTECTED
     .delete(authenticateJWT, requireAdmin, tripsController.tripsDeleteTrip);  // DELETE Method deletes a trip - PROTECTED
 
 // Authentication routes (public) - with rate limiting
-router.route('/register').post(registerLimiter, authController.register);
-router.route('/login').post(loginLimiter, authController.login);
+router.route('/register').post(registerLimiter, validateRegister, authController.register);
+router.route('/login').post(loginLimiter, validateLogin, authController.login);
 
 // User management routes
 router
@@ -104,7 +113,7 @@ router
 router
     .route('/bookings')
     .get(authenticateJWT, bookingsController.bookingsList)
-    .post(authenticateJWT, bookingsController.bookingsAddBooking);
+    .post(authenticateJWT, validateBooking, bookingsController.bookingsAddBooking);
 
 router
     .route('/bookings/user/:email')
@@ -118,7 +127,7 @@ router
 
 router
     .route('/bookings/:bookingId/status')
-    .patch(authenticateJWT, bookingsController.bookingsUpdateStatus);
+    .patch(authenticateJWT, validateBookingStatus, bookingsController.bookingsUpdateStatus);
 
 // Cart routes
 router
@@ -128,7 +137,7 @@ router
 
 router
     .route('/cart/:email/items')
-    .post(authenticateJWT, cartController.addToCart);
+    .post(authenticateJWT, validateCartItem, cartController.addToCart);
 
 router
     .route('/cart/:email/items/:tripCode')
