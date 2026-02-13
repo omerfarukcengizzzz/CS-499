@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
 const Trip = require('../models/travlr');
 
-// GET: /trips - Returns all trips
+// GET: /trips - Returns paginated trips
 const tripsList = async (req, res) => {
     try {
         // Extract query parameters
         const searchQuery = req.query.search || '';
         const category = req.query.category || 'all';
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+        const skip = (page - 1) * limit;
 
         // Build query object
         let query = {};
@@ -21,6 +24,9 @@ const tripsList = async (req, res) => {
             query.category = category;
         }
 
+        // Get total count for pagination metadata
+        const total = await Trip.countDocuments(query).exec();
+
         let results;
 
         // If using text search, include relevance score and sort by it
@@ -28,15 +34,27 @@ const tripsList = async (req, res) => {
             results = await Trip
                 .find(query, { score: { $meta: 'textScore' } })
                 .sort({ score: { $meta: 'textScore' } })
+                .skip(skip)
+                .limit(limit)
                 .exec();
         } else {
             // No search term - just filter by category (or return all)
             results = await Trip
                 .find(query)
+                .skip(skip)
+                .limit(limit)
                 .exec();
         }
 
-        return res.status(200).json(results);
+        return res.status(200).json({
+            data: results,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

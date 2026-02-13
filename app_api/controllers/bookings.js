@@ -10,15 +10,28 @@ const bookingsList = async (req, res) => {
     try {
         // Admin sees all bookings, regular users see only their own
         const filter = req.auth.role === 'admin' ? {} : { userEmail: req.auth.email };
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+        const skip = (page - 1) * limit;
+
+        const total = await Booking.countDocuments(filter).exec();
 
         const bookings = await Booking
             .find(filter)
             .sort({ bookingDate: -1 })
+            .skip(skip)
+            .limit(limit)
             .exec();
 
-        return res
-            .status(200)
-            .json(bookings);
+        return res.status(200).json({
+            data: bookings,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
     } catch (err) {
         return res
             .status(500)
