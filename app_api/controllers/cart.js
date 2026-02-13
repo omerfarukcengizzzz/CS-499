@@ -1,7 +1,22 @@
 const mongoose = require('mongoose');
 const Cart = require('../models/cart');
 
+// Helper: check if user owns the resource or is admin
+const isOwnerOrAdmin = (req, ownerEmail) => {
+    return req.auth.email === ownerEmail || req.auth.role === 'admin';
+};
+
+// Middleware-style ownership check used at the top of each cart function
+const checkCartOwnership = (req, res) => {
+    if (!isOwnerOrAdmin(req, req.params.email)) {
+        res.status(403).json({ message: 'Access denied: you can only access your own cart' });
+        return false;
+    }
+    return true;
+};
+
 const getCart = async (req, res) => {
+    if (!checkCartOwnership(req, res)) return;
     try {
         let cart = await Cart.findOne({ userEmail: req.params.email }).exec();
 
@@ -22,19 +37,20 @@ const getCart = async (req, res) => {
 };
 
 const addToCart = async (req, res) => {
+    if (!checkCartOwnership(req, res)) return;
     try {
         const { tripCode, tripName, tripImage, resort, length, pricePerPerson, travelers, travelDate } = req.body;
 
         if (!tripCode || !tripName || !pricePerPerson || !travelers || !travelDate) {
-            return res.status(400).json({ 
-                message: 'Missing required fields: tripCode, tripName, pricePerPerson, travelers, travelDate' 
+            return res.status(400).json({
+                message: 'Missing required fields: tripCode, tripName, pricePerPerson, travelers, travelDate'
             });
         }
 
         const subtotal = parseFloat(pricePerPerson) * parseInt(travelers);
 
         let cart = await Cart.findOne({ userEmail: req.params.email }).exec();
-        
+
         if (!cart) {
             cart = new Cart({
                 userEmail: req.params.email,
@@ -72,6 +88,7 @@ const addToCart = async (req, res) => {
 };
 
 const updateCartItem = async (req, res) => {
+    if (!checkCartOwnership(req, res)) return;
     try {
         const { travelers, travelDate } = req.body;
 
@@ -105,6 +122,7 @@ const updateCartItem = async (req, res) => {
 };
 
 const removeFromCart = async (req, res) => {
+    if (!checkCartOwnership(req, res)) return;
     try {
         let cart = await Cart.findOne({ userEmail: req.params.email }).exec();
 
@@ -123,6 +141,7 @@ const removeFromCart = async (req, res) => {
 };
 
 const clearCart = async (req, res) => {
+    if (!checkCartOwnership(req, res)) return;
     try {
         let cart = await Cart.findOne({ userEmail: req.params.email }).exec();
 
@@ -141,9 +160,10 @@ const clearCart = async (req, res) => {
 };
 
 const checkoutCart = async (req, res) => {
+    if (!checkCartOwnership(req, res)) return;
     try {
         const Booking = require('../models/booking');
-        
+
         let cart = await Cart.findOne({ userEmail: req.params.email }).exec();
 
         if (!cart || cart.items.length === 0) {
