@@ -26,14 +26,14 @@ userSchema.methods.setPassword = function (password) {
     // Create a random 16-byte salt for this user
     this.salt = crypto.randomBytes(16).toString('hex');
 
-    // Hash the password using the salt (1000 iterations, 64-byte key, sha512 algorithm)
-    this.hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64, 'sha512').toString('hex');
+    // Hash the password using the salt (600000 iterations, 64-byte key, sha512 algorithm)
+    this.hash = crypto.pbkdf2Sync(password, this.salt, 600000, 64, 'sha512').toString('hex');
 };
 
 // Method to verify that the password submitted matches the stored password
 userSchema.methods.validPassword = function (password) {
     // Hash the submitted password with the stored salt
-    const hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64, 'sha512').toString('hex');
+    const hash = crypto.pbkdf2Sync(password, this.salt, 600000, 64, 'sha512').toString('hex');
 
     // Return true if the hashes match, false otherwise
     return this.hash === hash;
