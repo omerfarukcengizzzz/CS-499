@@ -1,4 +1,4 @@
-# CS-465 Full Stack Development
+# CS-499 Computer Science Capstone
 ## Travlr Getaways - Travel Booking Application
 
 ### Project Overview
@@ -11,9 +11,10 @@ A full-stack MEAN (MongoDB, Express, Angular, Node.js) travel booking applicatio
 - **Admin SPA**: Angular 17 - Single Page Application for dynamic admin interface
 
 **Backend:**
-- **API**: RESTful API with Express.js
+- **API**: RESTful API with Express.js, paginated endpoints
 - **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT with Passport.js, PBKDF2 password hashing
+- **Authentication**: JWT with Passport.js, PBKDF2 password hashing (600K iterations)
+- **Server Controllers**: Built-in `fetch` API with async/await
 
 ### Features
 
@@ -32,7 +33,8 @@ A full-stack MEAN (MongoDB, Express, Angular, Node.js) travel booking applicatio
 - User management (View, Delete)
 - Booking management (View, Update Status, Delete)
 - Statistics dashboard
-- JWT-protected routes
+- JWT-protected routes with Angular route guards
+- Paginated API response handling
 
 ### Installation
 
@@ -56,9 +58,13 @@ JWT_SECRET=your_secret_key_here
 mongod
 ```
 
-4. **Seed Database (Optional):**
+4. **Seed Database:**
 ```bash
-node seed.js
+# Full reseed (clears + reloads trips, creates admin + test users)
+node app_api/models/reseed.js
+
+# Trip data only
+node app_api/models/seed.js
 ```
 
 5. **Start Backend Server:**
@@ -85,12 +91,14 @@ travlr/
 │   │   └── services/       # Data services
 ├── app_api/                # Backend API
 │   ├── controllers/        # API logic
-│   ├── models/            # Mongoose schemas
-│   └── routes/            # API routes
+│   ├── middleware/         # Validation schemas
+│   ├── models/            # Mongoose schemas, seed/reseed scripts
+│   └── routes/            # API routes with rate limiting
 ├── app_server/            # Customer-facing server
-│   ├── controllers/       # Route controllers
+│   ├── controllers/       # Route controllers (fetch + async/await)
 │   ├── routes/           # Express routes
 │   └── views/            # Handlebars templates
+├── e2e/                  # Playwright E2E tests
 ├── public/               # Static assets
 └── app.js               # Main Express app
 ```
@@ -98,7 +106,7 @@ travlr/
 ### API Endpoints
 
 **Trips:**
-- GET `/api/trips` - List all trips (supports `?search=term` and `?category=type` query params)
+- GET `/api/trips` - List all trips (supports `?search=term`, `?category=type`, `?page=N&limit=N`)
 - POST `/api/trips` - Add trip (admin only, protected)
 - GET `/api/trips/:tripCode` - Get single trip
 - PUT `/api/trips/:tripCode` - Update trip (admin only, protected)
@@ -109,7 +117,7 @@ travlr/
 - POST `/api/login` - Login user
 
 **Bookings:**
-- GET `/api/bookings` - List all bookings (protected)
+- GET `/api/bookings` - List all bookings (protected, paginated)
 - POST `/api/bookings` - Create booking (protected)
 - GET `/api/bookings/user/:email` - Get user bookings (protected)
 - PUT `/api/bookings/:bookingId` - Update booking (protected)
@@ -133,42 +141,53 @@ travlr/
 - **Backend**: Node.js, Express.js, MongoDB, Mongoose
 - **Frontend**: Angular 17, Handlebars (HBS)
 - **Authentication**: JWT, Passport.js, PBKDF2
-- **Security**: express-rate-limit, express-mongo-sanitize
-- **Testing**: Playwright (E2E)
+- **Security**: express-rate-limit, express-mongo-sanitize, express-validator
+- **Testing**: Playwright (E2E, 54 tests)
 - **Styling**: CSS3, Bootstrap (admin)
 
 ### Security Features
 
 1. **Rate Limiting (Brute Force Prevention)**
-   - Login endpoint: 5 attempts per 15 minutes
-   - Registration endpoint: 3 attempts per hour
+   - Login endpoint: 1000 attempts per 15 minutes (only failed attempts counted)
+   - Registration endpoint: 500 attempts per hour (only failed attempts counted)
    - Returns 429 status with user-friendly error messages
    - Tracks by IP address using express-rate-limit
+   - `skipSuccessfulRequests: true` so legitimate users aren't penalized
 
 2. **Role-Based Access Control (RBAC)**
    - User roles: 'user' (default) and 'admin'
    - Admin-only endpoints: POST/PUT/DELETE trips
    - Role included in JWT payload for authorization
    - Returns 403 "Admin access required" for unauthorized attempts
+   - Ownership checks on booking and cart endpoints (users can only access their own data)
 
 3. **Input Sanitization (NoSQL Injection Prevention)**
    - express-mongo-sanitize middleware
    - Strips `$` and `.` characters from request bodies
    - Prevents malicious MongoDB query injection
 
-4. **JWT Authentication**
+4. **Input Validation**
+   - 7 express-validator schemas on all POST/PUT/PATCH routes
+   - Returns 422 with field-level error messages
+   - Validates registration, login, trips, bookings, cart items, and email
+
+5. **Angular Route Guards**
+   - `CanActivateFn` guard on all admin routes except `/login`
+   - Redirects unauthenticated users to login page
+
+6. **JWT Authentication**
    - Token-based authentication with Passport.js
-   - Password hashing with PBKDF2 (1000 iterations, SHA-512)
+   - Password hashing with PBKDF2 (600,000 iterations, SHA-512, OWASP 2023)
    - Secure HTTP-only cookies for customer site
    - Authorization headers for admin SPA
    - 1-hour token expiration
 
 **Admin User Setup:**
 ```bash
-# Create admin user for testing RBAC
-node create-admin.js
+# Run reseed to create admin user (among other data)
+node app_api/models/reseed.js
 
-# Default credentials:
+# Default admin credentials:
 # Email: admin@travlr.com
 # Password: Admin123!
 ```
@@ -230,4 +249,4 @@ npx playwright show-report
 ---
 
 ### Author
-Omer Cengiz | SNHU | CS-465 Full Stack Development
+Omer Cengiz | SNHU | CS-499 Computer Science Capstone

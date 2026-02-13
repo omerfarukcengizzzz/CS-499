@@ -241,9 +241,10 @@ test.describe('Authentication - API Security', () => {
                 length: '1 day',
                 start: new Date().toISOString(),
                 resort: 'Expired Resort',
-                perPerson: '0.01',
+                perPerson: 0.01,
                 image: 'expired.jpg',
-                description: 'This should fail with expired token'
+                description: 'This should fail with expired token',
+                category: 'other'
             }
         });
 
@@ -315,9 +316,10 @@ test.describe('Authentication - API Security', () => {
                 length: '3 days / 2 nights',
                 start: new Date().toISOString(),
                 resort: 'Auth Test Resort',
-                perPerson: '299.99',
+                perPerson: 299.99,
                 image: 'auth-test.jpg',
-                description: 'Created with valid authentication token'
+                description: 'Created with valid authentication token',
+                category: 'beach'
             }
         });
 

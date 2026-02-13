@@ -1,4 +1,3 @@
-const request = require('request');
 const apiOptions = {
     server: 'http://localhost:3000'
 };
@@ -16,9 +15,9 @@ function getUserFromToken(token) {
     }
 }
 
-const accountPage = (req, res) => {
+const accountPage = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -28,26 +27,22 @@ const accountPage = (req, res) => {
         return res.redirect('/login');
     }
 
-    const bookingsRequestOptions = {
-        url: `${apiOptions.server}/api/bookings/user/${user.email}`,
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {}
+    let bookingStats = {
+        total: 0,
+        pending: 0,
+        confirmed: 0,
+        completed: 0,
+        cancelled: 0,
+        totalSpent: 0
     };
 
-    request(bookingsRequestOptions, (err, response, bookings) => {
-        let bookingStats = {
-            total: 0,
-            pending: 0,
-            confirmed: 0,
-            completed: 0,
-            cancelled: 0,
-            totalSpent: 0
-        };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/bookings/user/${user.email}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-        if (!err && response.statusCode === 200 && bookings) {
+        if (response.ok) {
+            const bookings = await response.json();
             bookingStats.total = bookings.length;
             bookingStats.pending = bookings.filter(b => b.status === 'pending').length;
             bookingStats.confirmed = bookings.filter(b => b.status === 'confirmed').length;
@@ -57,20 +52,22 @@ const accountPage = (req, res) => {
                 .filter(b => b.status !== 'cancelled')
                 .reduce((sum, b) => sum + b.totalPrice, 0);
         }
+    } catch (err) {
+        // Leave stats at defaults
+    }
 
-        res.render('account', {
-            title: 'My Account - Travlr Getaways',
-            user: user,
-            bookingStats: bookingStats,
-            success: req.query.success,
-            error: req.query.error
-        });
+    res.render('account', {
+        title: 'My Account - Travlr Getaways',
+        user: user,
+        bookingStats: bookingStats,
+        success: req.query.success,
+        error: req.query.error
     });
 };
 
 const updateProfile = (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }

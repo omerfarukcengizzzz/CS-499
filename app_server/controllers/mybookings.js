@@ -1,11 +1,10 @@
-const request = require('request');
 const apiOptions = {
     server: 'http://localhost:3000'
 };
 
-const myBookings = (req, res) => {
+const myBookings = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -18,25 +17,18 @@ const myBookings = (req, res) => {
         return res.redirect('/login');
     }
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/bookings/user/${userEmail}`,
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {}
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/bookings/user/${userEmail}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-    request(requestOptions, (err, response, bookings) => {
         let message = null;
         let bookingsList = [];
 
-        if (err) {
-            message = 'Error loading bookings. Please try again.';
-        } else if (response.statusCode === 404) {
+        if (response.status === 404) {
             message = 'You have no bookings yet. Start exploring trips!';
-        } else if (response.statusCode === 200) {
-            bookingsList = bookings;
+        } else if (response.ok) {
+            bookingsList = await response.json();
             if (bookingsList.length === 0) {
                 message = 'You have no bookings yet. Start exploring trips!';
             }
@@ -50,36 +42,43 @@ const myBookings = (req, res) => {
             message: message,
             success: req.query.success
         });
-    });
+    } catch (err) {
+        res.render('mybookings', {
+            title: 'My Bookings - Travlr Getaways',
+            bookings: [],
+            message: 'Error loading bookings. Please try again.',
+            success: null
+        });
+    }
 };
 
-const cancelBooking = (req, res) => {
+const cancelBooking = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
 
     const bookingId = req.params.bookingId;
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/bookings/${bookingId}/status`,
-        method: 'PATCH',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {
-            status: 'cancelled'
-        }
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/bookings/${bookingId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: 'cancelled' })
+        });
 
-    request(requestOptions, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.redirect('/mybookings?error=cancel_failed');
         }
-        
+
         res.redirect('/mybookings?success=cancelled');
-    });
+    } catch (err) {
+        res.redirect('/mybookings?error=cancel_failed');
+    }
 };
 
 module.exports = {

@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Trip } from '../models/trip';
 import { User } from '../models/user';
 import { AuthResponse } from '../models/user';
@@ -32,9 +33,11 @@ export class TripDataService {
     return new HttpHeaders();
   }
 
-  // Method to retrieve all trips
+  // Method to retrieve all trips (unwraps paginated response)
   getTrips(): Observable<Trip[]> {
-    return this.http.get<Trip[]>(this.url);
+    return this.http.get<any>(this.url).pipe(
+      map(response => response.data || response)
+    );
   }
 
   // Method to add a new trip
@@ -94,7 +97,9 @@ export class TripDataService {
 
   getBookings(): Observable<Booking[]> {
     const url = `${this.baseUrl}/bookings`;
-    return this.http.get<Booking[]>(url, { headers: this.getHeaders() });
+    return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
+      map(response => response.data || response)
+    );
   }
 
   getBooking(bookingId: string): Observable<Booking> {
