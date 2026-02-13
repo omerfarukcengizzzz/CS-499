@@ -7,11 +7,11 @@ tripSchema = new mongoose.Schema({
     length: { type: String, required: true },
     start: { type: Date, required: true },
     resort: { type: String, required: true },
-    perPerson: { type: String, required: true },
+    perPerson: { type: Number, required: true },
     image: { type: String, required: true },
     description: { type: String, required: true },
-    category: { 
-        type: String, 
+    category: {
+        type: String,
         required: true,
         enum: ['beach', 'cruise', 'mountain', 'other'],
         default: 'other'
