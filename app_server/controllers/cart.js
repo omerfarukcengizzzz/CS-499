@@ -1,4 +1,3 @@
-const request = require('request');
 const apiOptions = {
     server: 'http://localhost:3000'
 };
@@ -15,9 +14,9 @@ function getUserFromToken(token) {
     }
 }
 
-const viewCart = (req, res) => {
+const viewCart = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -27,17 +26,12 @@ const viewCart = (req, res) => {
         return res.redirect('/login');
     }
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}`,
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {}
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-    request(requestOptions, (err, response, cart) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.render('cart', {
                 title: 'Shopping Cart - Travlr Getaways',
                 cart: { items: [], totalPrice: 0, itemCount: 0 },
@@ -46,6 +40,8 @@ const viewCart = (req, res) => {
             });
         }
 
+        const cart = await response.json();
+
         res.render('cart', {
             title: 'Shopping Cart - Travlr Getaways',
             cart: cart,
@@ -53,12 +49,19 @@ const viewCart = (req, res) => {
             success: req.query.success,
             userName: user.name
         });
-    });
+    } catch (err) {
+        res.render('cart', {
+            title: 'Shopping Cart - Travlr Getaways',
+            cart: { items: [], totalPrice: 0, itemCount: 0 },
+            error: 'Error loading cart',
+            userName: user.name
+        });
+    }
 };
 
-const addToCart = (req, res) => {
+const addToCart = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -70,36 +73,38 @@ const addToCart = (req, res) => {
 
     const { tripCode, tripName, tripImage, resort, length, pricePerPerson, travelers, travelDate } = req.body;
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}/items`,
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {
-            tripCode,
-            tripName,
-            tripImage,
-            resort,
-            length,
-            pricePerPerson: parseFloat(pricePerPerson),
-            travelers: parseInt(travelers),
-            travelDate
-        }
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}/items`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                tripCode,
+                tripName,
+                tripImage,
+                resort,
+                length,
+                pricePerPerson: parseFloat(pricePerPerson),
+                travelers: parseInt(travelers),
+                travelDate
+            })
+        });
 
-    request(requestOptions, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.redirect('/travel?error=add_to_cart_failed');
         }
-        
+
         res.redirect('/cart?success=added');
-    });
+    } catch (err) {
+        res.redirect('/travel?error=add_to_cart_failed');
+    }
 };
 
-const removeFromCart = (req, res) => {
+const removeFromCart = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -111,27 +116,25 @@ const removeFromCart = (req, res) => {
 
     const tripCode = req.params.tripCode;
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}/items/${tripCode}`,
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {}
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}/items/${tripCode}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-    request(requestOptions, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.redirect('/cart?error=remove_failed');
         }
-        
+
         res.redirect('/cart?success=removed');
-    });
+    } catch (err) {
+        res.redirect('/cart?error=remove_failed');
+    }
 };
 
-const updateCartItem = (req, res) => {
+const updateCartItem = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -144,30 +147,32 @@ const updateCartItem = (req, res) => {
     const tripCode = req.params.tripCode;
     const { travelers, travelDate } = req.body;
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}/items/${tripCode}`,
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {
-            travelers: parseInt(travelers),
-            travelDate
-        }
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}/items/${tripCode}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                travelers: parseInt(travelers),
+                travelDate
+            })
+        });
 
-    request(requestOptions, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.redirect('/cart?error=update_failed');
         }
-        
+
         res.redirect('/cart?success=updated');
-    });
+    } catch (err) {
+        res.redirect('/cart?error=update_failed');
+    }
 };
 
-const clearCart = (req, res) => {
+const clearCart = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -177,22 +182,20 @@ const clearCart = (req, res) => {
         return res.redirect('/login');
     }
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}`,
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {}
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-    request(requestOptions, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.redirect('/cart?error=clear_failed');
         }
-        
+
         res.redirect('/cart?success=cleared');
-    });
+    } catch (err) {
+        res.redirect('/cart?error=clear_failed');
+    }
 };
 
 module.exports = {

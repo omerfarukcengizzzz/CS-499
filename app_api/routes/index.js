@@ -19,23 +19,26 @@ const {
     validateEmail
 } = require('../middleware/validation');
 
-// Rate limiter for login attempts - 5 attempts per 15 minutes
+// Rate limiter for login attempts - 1000 attempts per 15 minutes
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5,
+    max: 1000,
     message: { message: 'Too many login attempts. Please try again after 15 minutes.' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skipSuccessfulRequests: true
 });
 
-// Rate limiter for registration - 3 attempts per hour
+// Rate limiter for registration - 500 attempts per hour
 const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    max: 3,
+    max: 500,
     message: { message: 'Too many registration attempts. Please try again after an hour.' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skipSuccessfulRequests: true
 });
+
 
 // Method to authenticate our JWT
 function authenticateJWT(req, res, next) {

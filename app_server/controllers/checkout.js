@@ -1,4 +1,3 @@
-const request = require('request');
 const apiOptions = {
     server: 'http://localhost:3000'
 };
@@ -15,9 +14,9 @@ function getUserFromToken(token) {
     }
 }
 
-const checkoutForm = (req, res) => {
+const checkoutForm = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -27,19 +26,16 @@ const checkoutForm = (req, res) => {
         return res.redirect('/login');
     }
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}`,
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {}
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-    request(requestOptions, (err, response, cart) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.redirect('/cart?error=checkout_failed');
         }
+
+        const cart = await response.json();
 
         if (cart.itemCount === 0) {
             return res.redirect('/cart?error=cart_empty');
@@ -53,12 +49,14 @@ const checkoutForm = (req, res) => {
             error: null,
             success: null
         });
-    });
+    } catch (err) {
+        res.redirect('/cart?error=checkout_failed');
+    }
 };
 
-const processCheckout = (req, res) => {
+const processCheckout = async (req, res) => {
     const token = req.cookies['travlr-token'];
-    
+
     if (!token) {
         return res.redirect('/login');
     }
@@ -71,17 +69,13 @@ const processCheckout = (req, res) => {
     const { userName, contactPhone, specialRequests } = req.body;
 
     if (!userName || !contactPhone) {
-        const cartRequestOptions = {
-            url: `${apiOptions.server}/api/cart/${user.email}`,
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            json: {}
-        };
+        try {
+            const cartResponse = await fetch(`${apiOptions.server}/api/cart/${user.email}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const cart = await cartResponse.json();
 
-        return request(cartRequestOptions, (err, response, cart) => {
-            res.render('checkout', {
+            return res.render('checkout', {
                 title: 'Checkout - Travlr Getaways',
                 cart: cart,
                 userName: user.name,
@@ -89,47 +83,45 @@ const processCheckout = (req, res) => {
                 error: 'Please fill in all required fields',
                 success: null
             });
-        });
+        } catch (err) {
+            return res.redirect('/cart?error=checkout_failed');
+        }
     }
 
-    const checkoutRequestOptions = {
-        url: `${apiOptions.server}/api/cart/${user.email}/checkout`,
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        json: {
-            userName: userName,
-            contactPhone: contactPhone,
-            specialRequests: specialRequests || ''
-        }
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/cart/${user.email}/checkout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                userName: userName,
+                contactPhone: contactPhone,
+                specialRequests: specialRequests || ''
+            })
+        });
 
-    request(checkoutRequestOptions, (err, response, body) => {
-        if (err || response.statusCode !== 201) {
-            const cartRequestOptions = {
-                url: `${apiOptions.server}/api/cart/${user.email}`,
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                json: {}
-            };
+        if (!response.ok) {
+            const cartResponse = await fetch(`${apiOptions.server}/api/cart/${user.email}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const cart = await cartResponse.json();
 
-            return request(cartRequestOptions, (err, response, cart) => {
-                res.render('checkout', {
-                    title: 'Checkout - Travlr Getaways',
-                    cart: cart,
-                    userName: user.name,
-                    userEmail: user.email,
-                    error: 'Checkout failed. Please try again.',
-                    success: null
-                });
+            return res.render('checkout', {
+                title: 'Checkout - Travlr Getaways',
+                cart: cart,
+                userName: user.name,
+                userEmail: user.email,
+                error: 'Checkout failed. Please try again.',
+                success: null
             });
         }
 
         res.redirect('/mybookings?success=checkout');
-    });
+    } catch (err) {
+        res.redirect('/cart?error=checkout_failed');
+    }
 };
 
 module.exports = {

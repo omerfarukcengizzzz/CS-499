@@ -1,28 +1,25 @@
-const request = require('request');
 const apiOptions = {
     server: 'http://localhost:3000'
 };
 
 const bookingForm = async (req, res) => {
     const tripCode = req.params.tripCode;
-    
+
     if (!tripCode) {
         return res.redirect('/travel');
     }
 
-    const requestOptions = {
-        url: `${apiOptions.server}/api/trips/${tripCode}`,
-        method: 'GET',
-        json: {}
-    };
+    try {
+        const response = await fetch(`${apiOptions.server}/api/trips/${tripCode}`);
 
-    request(requestOptions, (err, response, trip) => {
-        if (err || response.statusCode !== 200) {
+        if (!response.ok) {
             return res.render('error', {
                 message: 'Trip not found',
                 error: { status: 404 }
             });
         }
+
+        const trip = await response.json();
 
         const token = req.cookies['travlr-token'];
         let userEmail = '';
@@ -47,12 +44,17 @@ const bookingForm = async (req, res) => {
             error: null,
             success: null
         });
-    });
+    } catch (err) {
+        res.render('error', {
+            message: 'Error loading trip',
+            error: { status: 500 }
+        });
+    }
 };
 
 const bookingSubmit = async (req, res) => {
     const tripCode = req.params.tripCode;
-    
+
     const token = req.cookies['travlr-token'];
     if (!token) {
         return res.redirect('/login');
@@ -69,92 +71,93 @@ const bookingSubmit = async (req, res) => {
     }
 
     const { travelers, travelDate, contactPhone, specialRequests } = req.body;
-    
-    if (!travelers || !travelDate) {
-        const tripRequestOptions = {
-            url: `${apiOptions.server}/api/trips/${tripCode}`,
-            method: 'GET',
-            json: {}
-        };
 
-        return request(tripRequestOptions, (err, response, trip) => {
-            res.render('booking', {
-                title: 'Book Trip - Travlr Getaways',
-                trip: trip[0],
-                userEmail: userEmail,
-                userName: userName,
-                isLoggedIn: true,
-                error: 'Please fill in all required fields',
-                success: null
-            });
+    // Fetch the trip details first
+    let trip;
+    try {
+        const tripResponse = await fetch(`${apiOptions.server}/api/trips/${tripCode}`);
+        const tripData = await tripResponse.json();
+        trip = tripData[0];
+    } catch (err) {
+        return res.render('error', {
+            message: 'Trip not found',
+            error: { status: 404 }
         });
     }
 
-    const tripRequestOptions = {
-        url: `${apiOptions.server}/api/trips/${tripCode}`,
-        method: 'GET',
-        json: {}
-    };
-
-    request(tripRequestOptions, (err, tripResponse, tripData) => {
-        if (err || tripResponse.statusCode !== 200) {
-            return res.render('error', {
-                message: 'Trip not found',
-                error: { status: 404 }
-            });
-        }
-
-        const trip = tripData[0];
-        const pricePerPerson = parseFloat(trip.perPerson);
-        const totalPrice = pricePerPerson * parseInt(travelers);
-
-        const bookingData = {
-            tripCode: tripCode,
-            tripName: trip.name,
+    if (!travelers || !travelDate) {
+        return res.render('booking', {
+            title: 'Book Trip - Travlr Getaways',
+            trip: trip,
             userEmail: userEmail,
             userName: userName,
-            travelers: parseInt(travelers),
-            totalPrice: totalPrice,
-            travelDate: travelDate,
-            contactPhone: contactPhone || '',
-            specialRequests: specialRequests || '',
-            status: 'pending'
-        };
+            isLoggedIn: true,
+            error: 'Please fill in all required fields',
+            success: null
+        });
+    }
 
-        const bookingRequestOptions = {
-            url: `${apiOptions.server}/api/bookings`,
+    const pricePerPerson = typeof trip.perPerson === 'number' ? trip.perPerson : parseFloat(trip.perPerson);
+    const totalPrice = pricePerPerson * parseInt(travelers);
+
+    const bookingData = {
+        tripCode: tripCode,
+        tripName: trip.name,
+        userEmail: userEmail,
+        userName: userName,
+        travelers: parseInt(travelers),
+        totalPrice: totalPrice,
+        travelDate: travelDate,
+        contactPhone: contactPhone || '',
+        specialRequests: specialRequests || '',
+        status: 'pending'
+    };
+
+    try {
+        const bookingResponse = await fetch(`${apiOptions.server}/api/bookings`, {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            json: bookingData
-        };
+            body: JSON.stringify(bookingData)
+        });
 
-        request(bookingRequestOptions, (bookingErr, bookingResponse, bookingBody) => {
-            if (bookingErr || bookingResponse.statusCode !== 201) {
-                return res.render('booking', {
-                    title: 'Book Trip - Travlr Getaways',
-                    trip: trip,
-                    userEmail: userEmail,
-                    userName: userName,
-                    isLoggedIn: true,
-                    error: 'Booking failed. Please try again.',
-                    success: null
-                });
-            }
-
-            res.render('booking', {
+        if (!bookingResponse.ok) {
+            return res.render('booking', {
                 title: 'Book Trip - Travlr Getaways',
                 trip: trip,
                 userEmail: userEmail,
                 userName: userName,
                 isLoggedIn: true,
-                error: null,
-                success: 'Booking successful! Your booking ID is: ' + bookingBody._id,
-                bookingId: bookingBody._id
+                error: 'Booking failed. Please try again.',
+                success: null
             });
+        }
+
+        const bookingBody = await bookingResponse.json();
+
+        res.render('booking', {
+            title: 'Book Trip - Travlr Getaways',
+            trip: trip,
+            userEmail: userEmail,
+            userName: userName,
+            isLoggedIn: true,
+            error: null,
+            success: 'Booking successful! Your booking ID is: ' + bookingBody._id,
+            bookingId: bookingBody._id
         });
-    });
+    } catch (err) {
+        res.render('booking', {
+            title: 'Book Trip - Travlr Getaways',
+            trip: trip,
+            userEmail: userEmail,
+            userName: userName,
+            isLoggedIn: true,
+            error: 'Booking failed. Please try again.',
+            success: null
+        });
+    }
 };
 
 module.exports = {

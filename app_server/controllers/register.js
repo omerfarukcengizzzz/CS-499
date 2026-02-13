@@ -1,4 +1,3 @@
-const request = require('request');
 const apiOptions = {
     server: 'http://localhost:3000'
 };
@@ -15,7 +14,7 @@ const register = (req, res) => {
 // POST: Handle registration submission
 const registerSubmit = async (req, res) => {
     const { name, email, password, passwordConfirm } = req.body;
-    
+
     // Validation
     if (!name || !email || !password || !passwordConfirm) {
         return res.render('register', {
@@ -24,7 +23,7 @@ const registerSubmit = async (req, res) => {
             success: null
         });
     }
-    
+
     if (password !== passwordConfirm) {
         return res.render('register', {
             title: 'Register - Travlr Getaways',
@@ -32,7 +31,7 @@ const registerSubmit = async (req, res) => {
             success: null
         });
     }
-    
+
     if (password.length < 8) {
         return res.render('register', {
             title: 'Register - Travlr Getaways',
@@ -40,29 +39,18 @@ const registerSubmit = async (req, res) => {
             success: null
         });
     }
-    
-    // Call API to register user
-    const requestOptions = {
-        url: `${apiOptions.server}/api/register`,
-        method: 'POST',
-        json: {
-            name: name,
-            email: email,
-            password: password
-        }
-    };
-    
-    request(requestOptions, (err, response, body) => {
-        if (err) {
-            return res.render('register', {
-                title: 'Register - Travlr Getaways',
-                error: 'Registration failed. Please try again.',
-                success: null
-            });
-        }
-        
-        if (response.statusCode === 200) {
-            // Registration successful
+
+    try {
+        // Call API to register user using built-in fetch
+        const response = await fetch(`${apiOptions.server}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+
+        const body = await response.json();
+
+        if (response.ok) {
             res.render('register', {
                 title: 'Register - Travlr Getaways',
                 error: null,
@@ -75,10 +63,17 @@ const registerSubmit = async (req, res) => {
                 success: null
             });
         }
-    });
+    } catch (err) {
+        res.render('register', {
+            title: 'Register - Travlr Getaways',
+            error: 'Registration failed. Please try again.',
+            success: null
+        });
+    }
 };
 
 module.exports = {
     register,
     registerSubmit
 };
+

@@ -31,9 +31,10 @@ const TEST_TRIP = {
     length: '7 days / 6 nights',
     start: new Date().toISOString(),
     resort: 'Paradise Resort',
-    perPerson: '999.99',
+    perPerson: 999.99,
     image: 'test-trip.jpg',
-    description: 'A wonderful test trip for E2E testing purposes.'
+    description: 'A wonderful test trip for E2E testing purposes.',
+    category: 'beach'
 };
 
 /**
