@@ -1,10 +1,18 @@
 const mongoose = require('mongoose');
 const Booking = require('../models/booking');
 
+// Helper: check if user owns the resource or is admin
+const isOwnerOrAdmin = (req, ownerEmail) => {
+    return req.auth.email === ownerEmail || req.auth.role === 'admin';
+};
+
 const bookingsList = async (req, res) => {
     try {
+        // Admin sees all bookings, regular users see only their own
+        const filter = req.auth.role === 'admin' ? {} : { userEmail: req.auth.email };
+
         const bookings = await Booking
-            .find({})
+            .find(filter)
             .sort({ bookingDate: -1 })
             .exec();
 
@@ -20,6 +28,11 @@ const bookingsList = async (req, res) => {
 
 const bookingsByUser = async (req, res) => {
     try {
+        // Users can only view their own bookings
+        if (!isOwnerOrAdmin(req, req.params.email)) {
+            return res.status(403).json({ message: 'Access denied: you can only view your own bookings' });
+        }
+
         const bookings = await Booking
             .find({ userEmail: req.params.email })
             .sort({ bookingDate: -1 })
@@ -51,6 +64,11 @@ const bookingsFindById = async (req, res) => {
             return res
                 .status(404)
                 .json({ message: 'Booking not found' });
+        }
+
+        // Users can only view their own bookings
+        if (!isOwnerOrAdmin(req, booking.userEmail)) {
+            return res.status(403).json({ message: 'Access denied: you can only view your own bookings' });
         }
 
         return res
@@ -98,6 +116,17 @@ const bookingsAddBooking = async (req, res) => {
 
 const bookingsUpdateBooking = async (req, res) => {
     try {
+        // First fetch to check ownership
+        const booking = await Booking.findById(req.params.bookingId).exec();
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (!isOwnerOrAdmin(req, booking.userEmail)) {
+            return res.status(403).json({ message: 'Access denied: you can only update your own bookings' });
+        }
+
         const updatedBooking = await Booking.findByIdAndUpdate(
             req.params.bookingId,
             {
@@ -111,12 +140,6 @@ const bookingsUpdateBooking = async (req, res) => {
             { new: true }
         ).exec();
 
-        if (!updatedBooking) {
-            return res
-                .status(404)
-                .json({ message: 'Booking not found' });
-        }
-
         return res
             .status(200)
             .json(updatedBooking);
@@ -129,13 +152,18 @@ const bookingsUpdateBooking = async (req, res) => {
 
 const bookingsDeleteBooking = async (req, res) => {
     try {
-        const deletedBooking = await Booking.findByIdAndDelete(req.params.bookingId).exec();
+        // First fetch to check ownership
+        const booking = await Booking.findById(req.params.bookingId).exec();
 
-        if (!deletedBooking) {
-            return res
-                .status(404)
-                .json({ message: 'Booking not found' });
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
         }
+
+        if (!isOwnerOrAdmin(req, booking.userEmail)) {
+            return res.status(403).json({ message: 'Access denied: you can only delete your own bookings' });
+        }
+
+        await Booking.findByIdAndDelete(req.params.bookingId).exec();
 
         return res
             .status(204)
@@ -155,17 +183,22 @@ const bookingsUpdateStatus = async (req, res) => {
                 .json({ message: 'Status is required' });
         }
 
+        // First fetch to check ownership
+        const booking = await Booking.findById(req.params.bookingId).exec();
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (!isOwnerOrAdmin(req, booking.userEmail)) {
+            return res.status(403).json({ message: 'Access denied: you can only update your own bookings' });
+        }
+
         const updatedBooking = await Booking.findByIdAndUpdate(
             req.params.bookingId,
             { status: req.body.status },
             { new: true }
         ).exec();
-
-        if (!updatedBooking) {
-            return res
-                .status(404)
-                .json({ message: 'Booking not found' });
-        }
 
         return res
             .status(200)
